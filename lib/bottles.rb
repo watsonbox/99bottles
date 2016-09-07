@@ -1,31 +1,4 @@
-class Bottles
-  def song
-    verses(99, 0)
-  end
-
-  def verses(start_count, end_count)
-    counts = start_count.downto(end_count)
-    counts.map(&method(:verse)).join("\n")
-  end
-
-  def verse(count)
-    [situation_line(count), action_line(count)].map { |l| "#{l}\n"}.join
-  end
-
-  private
-
-  def situation_line(count)
-    "#{bottle_string(count).capitalize} of beer on the wall, #{bottle_string(count)} of beer."
-  end
-
-  def action_line(count)
-    if count == 0
-      "Go to the store and buy some more, 99 bottles of beer on the wall."
-    else
-      "Take #{it_or_one(count)} down and pass it around, #{bottle_string(count-1)} of beer on the wall."
-    end
-  end
-
+module Utils
   def bottle_string(count)
     "#{no_more_or_count(count)} #{bottle_or_bottles(count)}"
   end
@@ -40,5 +13,45 @@ class Bottles
 
   def no_more_or_count(count)
     count == 0 ? "no more" : count
+  end
+end
+
+class Line
+  include Utils
+end
+
+class SituationLine < Line
+  def generate(count)
+    "#{bottle_string(count).capitalize} of beer on the wall, #{bottle_string(count)} of beer."
+  end
+end
+
+class ActionLine < Line
+  def generate(count)
+    if count == 0
+      return "Go to the store and buy some more, 99 bottles of beer on the wall."
+    end
+
+    "Take #{it_or_one(count)} down and pass it around, #{bottle_string(count-1)} of beer on the wall."
+  end
+end
+
+class Verse
+  def generate(count)
+    [SituationLine, ActionLine].map { |klass| "#{klass.new.generate(count)}\n"}.join
+  end
+end
+
+class Bottles
+  def song
+    verses(99, 0)
+  end
+
+  def verses(start_count, end_count)
+    start_count.downto(end_count).map(&method(:verse)).join("\n")
+  end
+
+  def verse(count)
+    Verse.new.generate(count)
   end
 end
